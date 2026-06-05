@@ -1,0 +1,29 @@
+---
+layout: default
+---
+<article class="paper-note prose">
+  <header class="paper-header">
+    <p class="eyebrow">{{ page.topic | default: 'research note' }}</p>
+    <h1>{{ page.title }}</h1>
+    {% if page.summary %}<p class="lede">{{ page.summary }}</p>{% endif %}
+    <dl class="paper-meta" aria-label="Article metadata">
+      <div><dt>Date</dt><dd>{{ page.date | date: "%Y-%m-%d" }}</dd></div>
+      <div><dt>Status</dt><dd>{{ page.status | default: 'draft' }}</dd></div>
+      <div><dt>Safety</dt><dd>{{ page.public_safety | default: 'reviewed' }}</dd></div>
+      <div><dt>Sources</dt><dd>{{ page.source_visibility | default: 'public-only' }}</dd></div>
+    </dl>
+  </header>
+
+  <nav class="paper-toc" aria-label="Paper note sections">
+    <p class="toc-title">On this note</p>
+    <a href="#abstract">Abstract</a>
+    <a href="#motivation">Motivation</a>
+    <a href="#method">Method</a>
+    <a href="#result">Result</a>
+    <a href="#discussion">Discussion</a>
+    <a href="#limitations">Limitations</a>
+    <a href="#references">References</a>
+  </nav>
+
+  {{ content }}
+</article>

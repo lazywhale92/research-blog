@@ -1,0 +1,34 @@
+title: "Research Notes"
+description: "Paper-like applied research notes, experiment summaries, and publication pipeline notes."
+url: "https://lazywhale92.github.io"
+baseurl: "/research-blog"
+lang: en
+timezone: Asia/Seoul
+permalink: /:title/
+markdown: kramdown
+highlighter: rouge
+plugins: []
+collections:
+  docs:
+    output: true
+    permalink: /docs/:name/
+defaults:
+  - scope:
+      path: ""
+      type: "posts"
+    values:
+      layout: paper-note
+      status: draft
+      public_safety: reviewed
+      source_visibility: public-only
+  - scope:
+      path: ""
+      type: "docs"
+    values:
+      layout: page
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - README.md
+  - node_modules
+  - vendor
