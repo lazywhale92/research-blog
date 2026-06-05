@@ -8,10 +8,6 @@ permalink: /:title/
 markdown: kramdown
 highlighter: rouge
 plugins: []
-collections:
-  docs:
-    output: true
-    permalink: /docs/:name/
 defaults:
   - scope:
       path: ""
@@ -21,11 +17,6 @@ defaults:
       status: draft
       public_safety: reviewed
       source_visibility: public-only
-  - scope:
-      path: ""
-      type: "docs"
-    values:
-      layout: page
 exclude:
   - Gemfile
   - Gemfile.lock
