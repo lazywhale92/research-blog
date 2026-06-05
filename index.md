@@ -34,17 +34,24 @@ summary: "A compact public channel for paper-like applied research notes."
     <p class="eyebrow">Latest</p>
     <h2>Research notes</h2>
   </div>
-  {% assign visible_posts = site.posts | where_exp: "post", "post.hidden != true" %}
-  {% for post in visible_posts limit: 6 %}
-    <article class="post-row">
-      <div>
-        <p class="post-meta">{{ post.date | date: "%Y-%m-%d" }} · {{ post.topic | default: 'other' }} · {{ post.status | default: 'draft' }}</p>
-        <h3><a href="{{ post.url | relative_url }}">{{ post.title }}</a></h3>
-        <p>{{ post.summary }}</p>
-      </div>
-      <a class="read-link" href="{{ post.url | relative_url }}">Read →</a>
-    </article>
-  {% else %}
-    <p>No public notes yet.</p>
+  {% assign candidate_posts = site.posts | where_exp: "post", "post.hidden != true" %}
+  {% assign visible_count = 0 %}
+  {% for post in candidate_posts %}
+    {% if visible_count < 6 %}
+      {% if post.status == "published" or post.status == "corrected" %}
+        {% assign visible_count = visible_count | plus: 1 %}
+        <article class="post-row">
+          <div>
+            <p class="post-meta">{{ post.date | date: "%Y-%m-%d" }} · {{ post.topic | default: 'other' | escape }} · {{ post.status | default: 'draft' | escape }}</p>
+            <h3><a href="{{ post.url | relative_url }}">{{ post.title | escape }}</a></h3>
+            <p>{{ post.summary | escape }}</p>
+          </div>
+          <a class="read-link" href="{{ post.url | relative_url }}">Read →</a>
+        </article>
+      {% endif %}
+    {% endif %}
   {% endfor %}
+  {% if visible_count == 0 %}
+    <p>No public notes yet.</p>
+  {% endif %}
 </section>

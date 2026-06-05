@@ -6,25 +6,26 @@ import re
 import sys
 from html.parser import HTMLParser
 from pathlib import Path
+from urllib.parse import urlparse
 
 ROOT = Path(__file__).resolve().parents[1]
 TEXT_SUFFIXES = {'.md', '.html', '.yml', '.yaml', '.css', '.txt'}
 POSTS = ROOT / '_posts'
 SITE = ROOT / '_site'
 
+# Public, generic leak patterns only. Keep private/personal denylist terms out of this public repo.
 FORBIDDEN_PATTERNS = [
-    (re.compile(r'/Users/ms\b'), 'local absolute user path'),
-    (re.compile(r'agent-work-log/raw', re.I), 'private raw work-log path'),
-    (re.compile(r'raw/kakaotalk', re.I), 'private chat raw path'),
-    (re.compile(r'kakao_chat', re.I), 'private chat transcript identifier'),
-    (re.compile(r'interpark', re.I), 'company identifier'),
-    (re.compile(r'work@interpark\.com', re.I), 'company account'),
+    (re.compile(r'/Users/[A-Za-z0-9._-]+\b'), 'local absolute user path'),
+    (re.compile(r'(?<![A-Za-z0-9_-])raw/[A-Za-z0-9._/-]+', re.I), 'raw/private source path'),
+    (re.compile(r'(?<![A-Za-z0-9_-])(?:jira|slack|notion)://', re.I), 'internal tool URL scheme'),
+    (re.compile(r'(?:password|api[_-]?key|token|secret)\s*[:=]\s*["\']?[A-Za-z0-9_./+=-]{16,}', re.I), 'credential-like assignment'),
 ]
 
 REQUIRED_FRONTMATTER = {
     'title', 'date', 'layout', 'status', 'topic', 'tags', 'summary',
     'public_safety', 'source_visibility', 'repo_artifacts'
 }
+ALLOWED_ARTIFACT_HOSTS = {'github.com', 'gist.github.com', 'docs.github.com', 'jekyllrb.com'}
 
 
 def public_files():
@@ -42,19 +43,64 @@ def text_files():
             yield path
 
 
-def parse_frontmatter(path: Path) -> dict[str, str]:
+def parse_frontmatter(path: Path) -> tuple[dict[str, str], str]:
     text = path.read_text(encoding='utf-8')
     if not text.startswith('---\n'):
         raise ValueError(f'{path.relative_to(ROOT)} missing YAML frontmatter')
     end = text.find('\n---\n', 4)
     if end == -1:
         raise ValueError(f'{path.relative_to(ROOT)} missing closing YAML frontmatter')
+    yaml_text = text[4:end]
     fields: dict[str, str] = {}
-    for line in text[4:end].splitlines():
+    for line in yaml_text.splitlines():
         if ':' in line and not line.startswith(' '):
             key, value = line.split(':', 1)
             fields[key.strip()] = value.strip()
-    return fields
+    return fields, yaml_text
+
+
+def yaml_bool(fields: dict[str, str], key: str) -> bool | None:
+    if key not in fields:
+        return None
+    value = fields[key].strip().strip('"\'').lower()
+    if value == 'true':
+        return True
+    if value == 'false':
+        return False
+    return None
+
+
+def yaml_list_values(yaml_text: str, key: str) -> list[str]:
+    lines = yaml_text.splitlines()
+    values: list[str] = []
+    in_list = False
+    for line in lines:
+        if line.startswith(f'{key}:'):
+            tail = line.split(':', 1)[1].strip()
+            if tail.startswith('[') and tail.endswith(']'):
+                inner = tail[1:-1].strip()
+                if inner:
+                    values.extend(part.strip().strip('"\'') for part in inner.split(','))
+                in_list = False
+            else:
+                in_list = True
+            continue
+        if in_list:
+            if line.startswith('  - '):
+                values.append(line[4:].strip().strip('"\''))
+            elif line and not line.startswith(' '):
+                in_list = False
+    return [value for value in values if value]
+
+
+def validate_artifact_urls(path: Path, yaml_text: str, errors: list[str]) -> None:
+    for url in yaml_list_values(yaml_text, 'repo_artifacts'):
+        parsed = urlparse(url)
+        if parsed.scheme != 'https' or not parsed.netloc:
+            errors.append(f'{path.relative_to(ROOT)} repo_artifacts entry must be an https URL: {url}')
+            continue
+        if parsed.netloc.lower() not in ALLOWED_ARTIFACT_HOSTS:
+            errors.append(f'{path.relative_to(ROOT)} repo_artifacts host is not allowlisted: {url}')
 
 
 class LinkParser(HTMLParser):
@@ -77,6 +123,8 @@ class LinkParser(HTMLParser):
 def validate_generated_links(errors: list[str]) -> None:
     if not SITE.exists():
         return
+    if (SITE / 'scripts').exists():
+        errors.append('generated site must not contain scripts/ helper sources')
     for html in SITE.rglob('*.html'):
         parser = LinkParser()
         parser.feed(html.read_text(encoding='utf-8', errors='ignore'))
@@ -105,11 +153,10 @@ def main() -> int:
 
     for post in sorted(POSTS.glob('*.md')):
         try:
-            fields = parse_frontmatter(post)
+            fields, yaml_text = parse_frontmatter(post)
         except ValueError as exc:
             errors.append(str(exc))
             continue
-        text = post.read_text(encoding='utf-8')
         missing = sorted(REQUIRED_FRONTMATTER - fields.keys())
         if missing:
             errors.append(f'{post.relative_to(ROOT)} missing frontmatter fields: {", ".join(missing)}')
@@ -122,8 +169,12 @@ def main() -> int:
         status = fields.get('status', '').strip('"')
         if status not in {'draft', 'published', 'corrected'}:
             errors.append(f'{post.relative_to(ROOT)} invalid status: {status}')
-        if status not in {'published', 'corrected'} and 'published: false' not in text:
-            errors.append(f'{post.relative_to(ROOT)} non-public status must include published: false to avoid direct public rendering')
+        published = yaml_bool(fields, 'published')
+        if status in {'published', 'corrected'} and published is False:
+            errors.append(f'{post.relative_to(ROOT)} cannot combine status {status} with published: false')
+        if status not in {'published', 'corrected'} and published is not False:
+            errors.append(f'{post.relative_to(ROOT)} non-public status must include frontmatter published: false')
+        validate_artifact_urls(post, yaml_text, errors)
 
     validate_generated_links(errors)
 
