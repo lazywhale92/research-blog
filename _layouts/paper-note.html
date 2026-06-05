@@ -3,14 +3,14 @@ layout: default
 ---
 <article class="paper-note prose">
   <header class="paper-header">
-    <p class="eyebrow">{{ page.topic | default: 'research note' }}</p>
-    <h1>{{ page.title }}</h1>
-    {% if page.summary %}<p class="lede">{{ page.summary }}</p>{% endif %}
+    <p class="eyebrow">{{ page.topic | default: 'research note' | escape }}</p>
+    <h1>{{ page.title | escape }}</h1>
+    {% if page.summary %}<p class="lede">{{ page.summary | escape }}</p>{% endif %}
     <dl class="paper-meta" aria-label="Article metadata">
       <div><dt>Date</dt><dd>{{ page.date | date: "%Y-%m-%d" }}</dd></div>
-      <div><dt>Status</dt><dd>{{ page.status | default: 'draft' }}</dd></div>
-      <div><dt>Safety</dt><dd>{{ page.public_safety | default: 'reviewed' }}</dd></div>
-      <div><dt>Sources</dt><dd>{{ page.source_visibility | default: 'public-only' }}</dd></div>
+      <div><dt>Status</dt><dd>{{ page.status | default: 'draft' | escape }}</dd></div>
+      <div><dt>Safety</dt><dd>{{ page.public_safety | default: 'reviewed' | escape }}</dd></div>
+      <div><dt>Sources</dt><dd>{{ page.source_visibility | default: 'public-only' | escape }}</dd></div>
     </dl>
   </header>
 
@@ -26,4 +26,15 @@ layout: default
   </nav>
 
   {{ content }}
+
+  {% if page.repo_artifacts and page.repo_artifacts.size > 0 %}
+  <section class="artifact-box" aria-labelledby="artifacts-heading">
+    <h2 id="artifacts-heading">Artifacts / reproducibility</h2>
+    <ul>
+      {% for artifact in page.repo_artifacts %}
+        <li><a href="{{ artifact | escape }}">{{ artifact | escape }}</a></li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
 </article>

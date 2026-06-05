@@ -2,7 +2,7 @@
 title: "Public research blog MVP"
 date: 2026-06-05
 layout: paper-note
-status: draft
+status: published
 topic: agent-systems
 tags:
   - publication-pipeline

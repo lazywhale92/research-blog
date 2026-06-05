@@ -47,7 +47,7 @@ The long-term automation loop should connect to this blog as a final, reviewed p
 For a real post, prefer:
 
 1. Create `draft/<post-slug>` branch.
-2. Add `_posts/YYYY-MM-DD-<post-slug>.md` using `templates/paper-note-template.md`.
+2. Add `_posts/YYYY-MM-DD-<post-slug>.md` using `templates/paper-note-template.md`; keep `published: false` until the post is intentionally public.
 3. Add `_reviews/<post-slug>.public-safety.md`.
 4. Run local build and link/content checks.
 5. Open PR using `.github/pull_request_template.md`.

@@ -31,6 +31,7 @@ title: "..."
 date: YYYY-MM-DD
 layout: paper-note
 status: draft | published | corrected
+published: false # required when status is draft; omit only when intentionally public
 topic: continual-learning | llm-eval | agent-systems | data-quality | other
 tags: []
 summary: "1-2 sentence public-safe summary"
@@ -39,6 +40,11 @@ source_visibility: public-only | private-sanitized
 repo_artifacts: []
 ---
 ```
+
+
+## Publication visibility semantics
+
+Anything merged to `main` is public history. In addition, any post that should not render on Pages must set `published: false` in frontmatter. Use `status: published` or `status: corrected` only after the public-safety checklist passes and the page is intended to be visible.
 
 ## Review checklist
 

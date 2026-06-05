@@ -122,3 +122,12 @@ h3 { font-size: 1.25rem; }
   .paper-meta { grid-template-columns: 1fr 1fr; }
   .paper-toc { position: static; }
 }
+.artifact-box {
+  margin-top: 42px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(159, 109, 79, 0.08);
+  padding: 18px 22px;
+}
+.artifact-box h2 { margin-top: 0; font-size: 1.3rem; }
+.artifact-box ul { margin-bottom: 0; }

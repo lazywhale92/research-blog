@@ -3,6 +3,7 @@ title: "Concise public-safe research note title"
 date: YYYY-MM-DD
 layout: paper-note
 status: draft
+published: false # non-published posts must not render on Pages
 topic: continual-learning | llm-eval | agent-systems | data-quality | other
 tags: []
 summary: "1-2 sentence public-safe summary."

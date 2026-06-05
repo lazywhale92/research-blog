@@ -9,8 +9,6 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
   group: "pages"
@@ -29,12 +27,18 @@ jobs:
         with:
           source: ./
           destination: ./_site
+      - name: Validate public content
+        run: python3 scripts/validate_content.py
       - name: Upload artifact
+        if: github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./_site
   deploy:
     if: github.event_name != 'pull_request'
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
